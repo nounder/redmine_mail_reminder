@@ -88,6 +88,10 @@ class MailRemindersController < ApplicationController
     end
   end
 
+  def authorize
+    User.current.admin? && @project.nil? or super
+  end
+
   def reminder_params
     params.require(:reminder).permit(:project_id, :query_id, :interval)
   end
