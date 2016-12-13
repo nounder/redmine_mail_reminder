@@ -7,13 +7,6 @@ module BoardsWatchers
       def self.included(base) # :nodoc:
         # sending instance methods to module
         base.send(:include, InstanceMethods)
-
-        base.class_eval do
-          unloadable
-
-          # aliasing methods if needed
-          #alias_method_chain :render_page_hierarchy, :watchers
-        end
       end
 
       # Instance methods are here
@@ -28,5 +21,5 @@ end
 
 # now we should include this module in ApplicationHelper module
 unless ApplicationHelper.included_modules.include? BoardsWatchers::Patches::ApplicationHelperPatch
-    ApplicationHelper.send(:include, BoardsWatchers::Patches::ApplicationHelperPatch)
+  ApplicationHelper.send(:include, BoardsWatchers::Patches::ApplicationHelperPatch)
 end

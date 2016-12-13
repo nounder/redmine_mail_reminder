@@ -1,19 +1,14 @@
-require "date"
-
 class MailReminder < ActiveRecord::Base
-  include ActiveModel::ForbiddenAttributesProtection
-  unloadable
-
   WEEKLY_INTERVAS = Date::DAYNAMES
   MONTHLY_INTERVALS = [1..31]
 
-  has_many :reminder_roles, :dependent => :destroy
-  has_many :roles, :through => :reminder_roles
+  has_many :reminder_roles, dependent: :destroy
+  has_many :roles, through: :reminder_roles
   belongs_to :query
   belongs_to :project
 
-  validates_presence_of :query_id
-  
+  validates :query_id, presence: true
+
   def self.intervals
     [:daily, :weekly, :monthly]
   end
@@ -78,6 +73,7 @@ class MailReminder < ActiveRecord::Base
 
   def execute_daily?
     comparision_date = Time.now
+
     if executed_at.nil? || (updated_at > executed_at)
       comparision_date = updated_at
     else
@@ -85,24 +81,19 @@ class MailReminder < ActiveRecord::Base
     end
 
     diff = ((Time.now - comparision_date) / 1.day).round.to_i
-    return diff >= interval_value + 1
+
+    diff >= interval_value + 1
   end
 
   def execute_weekly?
-    return Time.now.wday == interval_value
+    Time.now.wday == interval_value
   end
 
   def execute_monthly?
     if Time::days_in_month(Time.now.month) < interval_value
-      if Time.now.mday == Time.days_in_month(Time.now.month)
-        return true
-      else
-        return false
-      end
+      Time.now.mday == Time.days_in_month(Time.now.month)
     else
-      return Time.now.mday == interval_value
+      Time.now.mday == interval_value
     end
   end
-
-  attr_accessible :project_id, :query_id, :interval
 end
