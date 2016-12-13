@@ -30,12 +30,13 @@ class MailRemindersController < ApplicationController
           rr.save
         end
       end
-      
+
       flash[:notice] = t :reminder_created
     else
       flash[:error] = t :reminder_not_created
     end
-    render(:update) { |page| page.call 'location.reload(true)' }
+
+    render partial: 'reload'
   end
 
   def update
@@ -52,10 +53,11 @@ class MailRemindersController < ApplicationController
           rr.save
         end
       end
-      
+
       reminder.save
     end
-    render(:update) { |page| page.call 'location.reload' }
+
+    render partial: 'reload'
   end
 
   def destroy
@@ -63,7 +65,8 @@ class MailRemindersController < ApplicationController
     if reminder
       reminder.destroy
     end
-    render(:update) {|page| page.call 'location.reload'}
+
+    render partial: 'reload'
   end
 
   def update_interval_values
@@ -73,12 +76,8 @@ class MailRemindersController < ApplicationController
     rescue ActiveRecord::RecordNotFound
       reminder = MailReminder.new
     end
-    
-    render :update do |page|
-      page.replace_html "interval_values-#{params[:mail_reminder_id]}",
-      :partial => 'interval_values',
-      :locals => { :possible_values => vals, :selected_value => nil, :reminder => reminder}
-    end
+
+    render partial: 'reload'
   end
 
   private
