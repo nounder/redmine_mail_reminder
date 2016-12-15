@@ -27,21 +27,22 @@ Redmine::Plugin.register :redmine_mail_reminder do
 
   settings( :default => { 'email_subject' => :default_email_subject},
             :partial => 'reminder_settings/issue_reminder_settings')
-  
+
   project_module :issue_reminder do
     permission :view_issue_reminder, :mail_reminders => :index
   end
-   
+
+  requires_redmine version_or_higher: '3.1.0'
+
   if_proc = Proc.new{|project| project.enabled_module_names.include?('issue_reminder')}
-  menu :project_menu,
-    :issue_reminder,
-    { :controller => 'mail_reminders', :action => 'index' },
-    :caption => :issues_reminder,
-    :last => true,
-    #:after => :activity,
-    :param => :project_id,
-    :if => if_proc
+  menu :project_menu, :issue_reminder,
+       { controller: 'mail_reminders', action: 'index' },
+       caption: :issues_reminder,
+       last: true,
+       param: :project_id,
+       if: if_proc
 
-#  menu :application_menu, :issue_reminder, { :controller => 'reminders', :action => 'index' }, :caption => :usses_reminder
-
+  menu :admin_menu, :issue_reminder,
+       { controller: 'mail_reminders', action: 'index' },
+       caption: :issues_reminder
 end

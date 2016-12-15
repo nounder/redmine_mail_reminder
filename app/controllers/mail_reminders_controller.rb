@@ -81,10 +81,8 @@ class MailRemindersController < ApplicationController
   private
 
   def find_project
-    begin
+    if params[:project_id].present?
       @project = Project.find(params[:project_id])
-    rescue ActiveRecord::RecordNotFound
-      @project = Project.find(params[:reminder][:project_id]) if params[:reminder]
     end
   end
 
