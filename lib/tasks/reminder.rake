@@ -46,3 +46,51 @@ namespace :reminder do
       end
   end
 end
+
+namespace :redmine_mail_reminder do
+  task :send_reminders => :environment do
+    Rails.logger = Logger.new(STDOUT)
+
+    reminders = MailReminder.all.to_a
+
+    # reminders.select! do |reminder|
+    #   reminder.project.nil? || reminder.project.enabled_module_names.include?('issue_reminder') \
+    #   and reminder.execute?
+    # end
+
+    byebug
+
+    user_queries = Hash.new { |h, k| h[k] = Set.new }
+
+    reminders.each do |reminder|
+      # Find users with given roles
+      user_ids = MemberRole.joins(:member)
+                   .where(role_id: reminder.role_ids)
+      if reminder.project_id
+        user_ids = user_ids.where(members: { project_id: reminder.project_id })
+      end
+      user_ids = user_ids.pluck('DISTINCT user_id')
+      users = User.active.where(id: user_ids)
+
+      users.each do |user|
+        puts "Query##{reminder.query_id} for User##{user.id}"
+        user_queries[user] << reminder.query
+      end
+
+      #reminder.executed_at = Time.now
+      reminder.save
+    end
+
+    MailReminderMailer.with_synched_deliveries do
+      user_queries.each do |user, queries|
+        next if queries.empty?
+
+        mail = MailReminderMailer.queries_breakdown(user, queries)
+
+        mail.deliver if mail
+      end
+    end
+
+    byebug
+  end
+end

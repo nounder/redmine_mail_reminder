@@ -34,3 +34,5 @@ en:
   :reminder_not_created: "Reminder not created"
   :mail_subject: "Mail Subject"
   :value: "Value"
+  mail_reminder_plate_title: "%{name}, here is what's on your plate."
+  mail_reminder_plate_subtitle: "As of %{date}."

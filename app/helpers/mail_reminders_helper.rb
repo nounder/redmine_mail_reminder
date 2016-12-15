@@ -11,6 +11,10 @@ module MailRemindersHelper
     issues.map { |q| [q.name, q.id] }
   end
 
+  def query_headline(query)
+    query.project ? "#{query.project}: #{query.name}" : query.name
+  end
+
   def reminders_intervals_for_options
     MailReminder.intervals.collect {|i| [l(i).capitalize, i.to_s]}
   end

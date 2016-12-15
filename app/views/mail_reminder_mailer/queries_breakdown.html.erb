@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+  </head>
+  <body style="font-style: sans-serif">
+    <h2><%= l(:mail_reminder_plate_title, name: @user.firstname) %></h2>
+    <p><%= l(:mail_reminder_plate_subtitle, date: format_time(Time.now)) %></p>
+
+    <ul>
+      <% @query_issues.each do |query, issues| %>
+      <li>
+        <h3><%= query_headline(query) %></h3>
+        <ul>
+          <% issues.each do |issue| %>
+          <li><%= link_to_issue(issue) %></li>
+          <% end %>
+        </ul>
+      </li>
+      <% end %>
+    </ul>
+  </body>
+</html>

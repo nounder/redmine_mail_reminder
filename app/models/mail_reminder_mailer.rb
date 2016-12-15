@@ -25,6 +25,38 @@ class MailReminderMailer < ActionMailer::Base
     ActionMailer::Base.delivery_method = saved_method
   end
 
+  def queries_breakdown(user, queries)
+    @user = user
+
+    @query_issues = {}
+
+    queries.each do |query|
+      @sort_criteria = SortCriteria.new
+      @sort_criteria.available_criteria = query.sortable_columns
+      @sort_criteria.criteria = @sort_default if @sort_criteria.empty?
+
+      issues = query.issues(order: sort_clause)
+
+      @query_issues[query] = issues if issues.any?
+    end
+
+    headers['X-Mailer'] = 'Redmine'
+    headers['X-Redmine-Host'] = Setting.host_name
+    headers['X-Redmine-Site'] = Setting.app_title
+    headers['X-Auto-Response-Suppress'] = 'OOF'
+    headers['Auto-Submitted'] = 'auto-generated'
+    headers['From'] = Setting.mail_from
+    headers['List-Id'] = "<#{Setting.mail_from.to_s.gsub('@', '.')}>"
+
+    set_language_if_valid user.language
+
+    if @query_issues.any?
+      mail to: user.mail,
+           from: Setting.mail_from,
+           subject: Setting.plugin_redmine_mail_reminder['issue_reminder_mail_subject'] || "Issue Reminder"
+    end
+  end
+
   def issues_reminder(user, queries_data)
     User.current = user
     @queries_data = []
@@ -55,8 +87,35 @@ class MailReminderMailer < ActionMailer::Base
 
     set_language_if_valid user.language
     mail :to => user.mail,
-      :from => Setting.mail_from,
-      :subject => Setting.plugin_redmine_mail_reminder['issue_reminder_mail_subject'] || "Issue Reminder"
+         :from => Setting.mail_from,
+         :subject => Setting.plugin_redmine_mail_reminder['issue_reminder_mail_subject'] || "Issue Reminder"
     ActionMailer::Base.delivery_method = original_delivery_method
+  end
+
+  private
+
+  def remniders
+    return @reminders if @reminders
+
+
+    @reminders
+  end
+
+  def user_queries
+    user_queries = Hash.new { |k, v| user_queries[k] = Set.new }
+
+    reminders.each do |reminder|
+      # Find users with given roles
+      user_ids = MemberRole.joins(:member)
+                   .where(role_id: reminder.roles_ids)
+                   .pluck('DISTINCT user_id')
+      users = User.active.where(id: user_ids)
+
+      users.each do |user|
+        user_queries[user] << reminder.query
+      end
+    end
+
+    user_queries
   end
 end
